@@ -4,7 +4,7 @@ import java.util.TimerTask;
 
 public class Scheduler {
   private LinkedList<UserlandProcess> processes;
-  private Timer timer;
+  private final Timer timer;
   public UserlandProcess currentUserProcess;
 
   public Scheduler() {
@@ -26,7 +26,7 @@ public class Scheduler {
    */
   public int createProcess(UserlandProcess process) {
     this.processes.add(process);
-    if(!isProcessRunning() || currentUserProcess.isDone()) {
+    if(!isProcessRunning() || this.currentUserProcess.isDone()) {
       switchProcess();
     }
     return processes.size() - 1;
@@ -34,7 +34,6 @@ public class Scheduler {
 
   /**
    * Switch the current running process with the process at the head of the scheduler's list
-   * @return void
    */
   public void switchProcess() {
     if(!isProcessRunning() || this.currentUserProcess.isDone()) {
