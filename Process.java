@@ -1,13 +1,18 @@
+import java.beans.PropertyEditor;
 import java.util.concurrent.Semaphore;
 
 public abstract class Process implements Runnable {
     public Thread thread;
-    public Semaphore counter = new Semaphore(0);
+    public Semaphore counter;
     public boolean quantumExpired;
 
+   public Process () {
+       this.thread = new Thread(this);
+       this.counter = new Semaphore(0);
+       this.quantumExpired = false;
+   }
   /**
    * Requesting the process to stop by setting the quantumExpire boolean value to true
-   * @return void
    */
   public void requestStop() {
         this.quantumExpired = true;
@@ -31,19 +36,30 @@ public abstract class Process implements Runnable {
 
   /**
    *  Start the process by releasing the semaphore i.e. increment
-   * @return void
    */
   public void start() {
+      thread = new Thread(this);
+      thread.start();
       this.counter.release();
   }
 
   /**
    *  Stop the process by acquiring the semaphore i.e. decrement and calling the main process
-   * @return void
    */
   public void stop() throws InterruptedException {
     this.counter.acquire();
-    main();
+  }
+
+  /**
+   *
+   */
+  public void run() {
+      try {
+          this.counter.acquire();
+      } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+      }
+      main();
   }
 
   /**

@@ -1,13 +1,16 @@
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class Scheduler {
   private LinkedList<UserlandProcess> processes;
-  private final Timer timer;
+  private Timer timer;
   public UserlandProcess currentUserProcess;
 
-  public Scheduler() {
+  public Scheduler(UserlandProcess process) {
+    this.processes = new LinkedList<>();
+    this.currentUserProcess = process;
     timer = new Timer();
       timer.scheduleAtFixedRate(new TimerTask() {
         @Override
@@ -26,7 +29,7 @@ public class Scheduler {
    */
   public int createProcess(UserlandProcess process) {
     this.processes.add(process);
-    if(!isProcessRunning() || this.currentUserProcess.isDone()) {
+    if(!isProcessRunning() || currentUserProcess.isDone()) {
       switchProcess();
     }
     return processes.size() - 1;
@@ -36,7 +39,7 @@ public class Scheduler {
    * Switch the current running process with the process at the head of the scheduler's list
    */
   public void switchProcess() {
-    if(!isProcessRunning() || this.currentUserProcess.isDone()) {
+    if(!isProcessRunning() || this.currentUserProcess.isDone() || !this.processes.isEmpty()) {
       this.currentUserProcess = this.processes.getFirst();
     }
     this.processes.add(this.currentUserProcess);
@@ -47,9 +50,11 @@ public class Scheduler {
    * Checks if there is any processes running
    * @return true if there is a process running, false otherwise
    */
-  private boolean isProcessRunning() {
-    for(UserlandProcess process: this.processes) {
-      if(!process.isDone()) {
+  public boolean isProcessRunning() {
+    Iterator<UserlandProcess> processIterator = this.processes.iterator();
+    while(processIterator.hasNext()) {
+      UserlandProcess currentProcess = processIterator.next();
+      if (!currentProcess.isDone()) {
         return true;
       }
     }

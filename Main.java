@@ -1,6 +1,9 @@
 public class Main {
   public static void main(String [] args) {
-    OS.startup();
+    try {
+      OS.startup(new Init());
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
-
 }

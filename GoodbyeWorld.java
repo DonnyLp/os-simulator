@@ -1,17 +1,19 @@
 public class GoodbyeWorld extends UserlandProcess {
-  public void main() {
 
+  public GoodbyeWorld() {
+    super();
   }
 
-  @Override
-  public void run() {
+  public void main() {
+    start();
     while(true) {
+      System.out.println("GoodByeWorld");
       try {
+        Thread.sleep(50);
         cooperate();
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
-      System.out.println("HelloWorld");
     }
   }
 }
