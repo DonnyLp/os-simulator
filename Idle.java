@@ -1,5 +1,3 @@
-import javax.print.attribute.standard.Fidelity;
-
 public class Idle extends UserlandProcess {
 
   public Idle() {
@@ -7,11 +5,6 @@ public class Idle extends UserlandProcess {
   }
 
   public void main() {
-    start();
-  }
-
-  @Override
-  public void run() {
     while(true) {
       try {
         cooperate();
@@ -22,3 +15,4 @@ public class Idle extends UserlandProcess {
     }
   }
 }
+

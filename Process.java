@@ -1,18 +1,22 @@
-import java.beans.PropertyEditor;
 import java.util.concurrent.Semaphore;
 
 public abstract class Process implements Runnable {
     public Thread thread;
     public Semaphore counter;
+
+    public String name;
     public boolean quantumExpired;
 
    public Process () {
-       this.thread = new Thread(this);
+       this.name = this.getClass().getName();
+       this.thread = new Thread(this, name);
        this.counter = new Semaphore(0);
        this.quantumExpired = false;
+       this.thread.start();
    }
-  /**
-   * Requesting the process to stop by setting the quantumExpire boolean value to true
+
+   /**
+   * Request the process to stop by changing the quantumExpire value to true
    */
   public void requestStop() {
         this.quantumExpired = true;
@@ -31,49 +35,47 @@ public abstract class Process implements Runnable {
    *  @return true if the thread is active, false otherwise
    */
   public boolean isDone() {
-      return !thread.isAlive();
+      return !this.thread.isAlive();
   }
 
   /**
    *  Start the process by releasing the semaphore i.e. increment
    */
   public void start() {
-      thread = new Thread(this);
-      thread.start();
       this.counter.release();
   }
 
   /**
-   *  Stop the process by acquiring the semaphore i.e. decrement and calling the main process
+   *  Stop the process by acquiring the semaphore i.e. decrement
    */
   public void stop() throws InterruptedException {
     this.counter.acquire();
   }
 
   /**
-   *
+   * Implement the run method from the Runnable interface
    */
   public void run() {
       try {
           this.counter.acquire();
+          main();
       } catch (InterruptedException e) {
           throw new RuntimeException(e);
       }
-      main();
   }
 
   /**
-   * Handles the cooperation between processes when the quantum has expired
+   * Handle the cooperation between processes when the quantum has expired
    */
   public void cooperate() throws InterruptedException {
     if(quantumExpired) {
-      quantumExpired = false;
-       OS.switchProcess();
+        quantumExpired = false;
+        OS.switchProcess();
     }
   }
 
   /**
-   * Represents the main program
+   * Where main logic is held after acquiring the semaphore
    */
   public abstract void main();
 }

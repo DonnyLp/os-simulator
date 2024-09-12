@@ -1,16 +1,16 @@
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class Scheduler {
-  private LinkedList<UserlandProcess> processes;
-  private Timer timer;
+  private final LinkedList<UserlandProcess> processes;
+  private final Timer timer;
+  private int PID;
   public UserlandProcess currentUserProcess;
 
-  public Scheduler(UserlandProcess process) {
+  public Scheduler() {
     this.processes = new LinkedList<>();
-    this.currentUserProcess = process;
+    this.PID = -1;
     timer = new Timer();
       timer.scheduleAtFixedRate(new TimerTask() {
         @Override
@@ -21,7 +21,6 @@ public class Scheduler {
         }
       }, 0, 250);
   }
-
   /**
    * Add the new process to the scheduler's list and starts the process if there's no other processes running
    * @param process the Userland process to be added to processes or started
@@ -29,35 +28,35 @@ public class Scheduler {
    */
   public int createProcess(UserlandProcess process) {
     this.processes.add(process);
-    if(!isProcessRunning() || currentUserProcess.isDone()) {
+    if(this.currentUserProcess == null) {
       switchProcess();
-    }
-    return processes.size() - 1;
-  }
-
-  /**
-   * Switch the current running process with the process at the head of the scheduler's list
-   */
-  public void switchProcess() {
-    if(!isProcessRunning() || this.currentUserProcess.isDone() || !this.processes.isEmpty()) {
-      this.currentUserProcess = this.processes.getFirst();
-    }
-    this.processes.add(this.currentUserProcess);
-    this.processes.getFirst().start();
-  }
-
-  /**
-   * Checks if there is any processes running
-   * @return true if there is a process running, false otherwise
-   */
-  public boolean isProcessRunning() {
-    Iterator<UserlandProcess> processIterator = this.processes.iterator();
-    while(processIterator.hasNext()) {
-      UserlandProcess currentProcess = processIterator.next();
-      if (!currentProcess.isDone()) {
-        return true;
+    } else {
+      if (this.currentUserProcess instanceof Init && this.currentUserProcess.isDone()) {
+        this.currentUserProcess = this.processes.removeFirst();
       }
     }
-    return false;
+    return PID++;
+  }
+
+  /**
+   * Switch the current process with the next process waiting in queue
+   */
+  public void switchProcess() {
+    if (this.currentUserProcess != null && !this.currentUserProcess.isDone()) {
+        this.processes.add(this.currentUserProcess);
+    }
+    if(!this.processes.isEmpty()) {
+        this.currentUserProcess = this.processes.removeFirst();
+    }
+  }
+
+  /**
+   * Helper method to display the scheduler's processes in a readable format
+   */
+  public void displayProcesses() {
+    StringBuilder listFormatted = new StringBuilder();
+    for(Process current : this.processes) {
+      listFormatted.append(current.thread.getName()).append(",");
+    }
   }
 }

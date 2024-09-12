@@ -5,41 +5,60 @@ public class OS {
 
   public static CallType currentCall;
 
-  public static ArrayList<Object> parameters;
+  public static ArrayList<Object> parameters = new ArrayList<>();
+
+  public static Object returnValue;
 
   public enum CallType {
     createProcess,
     switchProcess
-  };
+  }
 
   /**
    * Create a new kernel land process
-   * @param process
+   * @param newUserlandProcess the userland process that is set to be created
    * @return index of the new process
    */
-  public static int createProcess(UserlandProcess process) throws InterruptedException {
-    //parameters.clear();
-    // Add new parameters to the list here:
+  public static int createProcess(UserlandProcess newUserlandProcess) throws InterruptedException {
+    if(!parameters.isEmpty()) {
+      parameters.clear();
+    }
+    parameters.add(newUserlandProcess);
     currentCall = CallType.createProcess;
     kernel.start();
-    if (kernel.getScheduler().isProcessRunning()) {
-      kernel.stop();
+    if(kernel.isProcessRunning()) {
+      kernel.stopCurrentlyRunning();
     } else {
-      while (kernel.getPID() == 0) {
+      while(OS.returnValue == null) {
         Thread.sleep(10);
       }
     }
-    return 0;
+    return (int) returnValue;
   }
 
+  /**
+   * Creates the initial components and processes for the application
+   * @param initialProcess init process that controls the creation of all other processes
+   */
   public static void startup(UserlandProcess initialProcess) throws InterruptedException {
-    kernel = new Kernel(initialProcess);
+    kernel = new Kernel();
     createProcess(initialProcess);
+    createProcess(new Idle());
   }
 
-  public static void switchProcess() {
-    //parameters.clear();
+  /**
+   * Switch the current process with the next process waiting in queue
+   */
+  public static void switchProcess() throws InterruptedException {
+    parameters.clear();
     currentCall = CallType.switchProcess;
     kernel.start();
+    if(kernel.isProcessRunning()) {
+      kernel.stopCurrentlyRunning();
+    } else {
+      while(OS.returnValue == null) {
+        Thread.sleep(10);
+      }
+    }
   }
 }

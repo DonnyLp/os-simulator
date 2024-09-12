@@ -5,12 +5,11 @@ public class GoodbyeWorld extends UserlandProcess {
   }
 
   public void main() {
-    start();
     while(true) {
-      System.out.println("GoodByeWorld");
       try {
-        Thread.sleep(50);
+        System.out.println("GoodbyeWorld");
         cooperate();
+        Thread.sleep(50);
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
