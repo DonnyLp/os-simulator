@@ -23,11 +23,12 @@ public class Scheduler {
   }
   /**
    * Add the new process to the scheduler's list and starts the process if there's no other processes running
-   * @param process the Userland process to be added to processes or started
+   * @param process the new Userland process to be created
    * @return PID of the new process
    */
   public int createProcess(UserlandProcess process) {
     this.processes.add(process);
+    System.out.println(this.processes);
     if(this.currentUserProcess == null) {
       switchProcess();
     } else {

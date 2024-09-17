@@ -20,9 +20,7 @@ public class OS {
    * @return index of the new process
    */
   public static int createProcess(UserlandProcess newUserlandProcess) throws InterruptedException {
-    if(!parameters.isEmpty()) {
-      parameters.clear();
-    }
+    parameters.clear();
     parameters.add(newUserlandProcess);
     currentCall = CallType.createProcess;
     kernel.start();
