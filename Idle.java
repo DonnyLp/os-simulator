@@ -1,9 +1,10 @@
 public class Idle extends UserlandProcess {
-  public void main() {
+
+  public Idle() {
+    super();
   }
 
-  @Override
-  public void run() {
+  public void main() {
     while(true) {
       try {
         cooperate();
@@ -14,3 +15,4 @@ public class Idle extends UserlandProcess {
     }
   }
 }
+

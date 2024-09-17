@@ -1,12 +1,18 @@
 public class HelloWorld extends UserlandProcess {
-  public void main() {
 
+  public HelloWorld () {
+   super();
   }
 
-  @Override
-  public void run() {
+  public void main() {
     while(true) {
-      System.out.println("HelloWorld");
+      try {
+        System.out.println("HelloWorld");
+        cooperate();
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 }
