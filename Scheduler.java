@@ -1,6 +1,7 @@
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.time.Clock;
 
 public class Scheduler {
   private final LinkedList<UserlandProcess> processes;
@@ -27,7 +28,6 @@ public class Scheduler {
    * @return PID of the new process
    */
   public int createProcess(UserlandProcess process) {
-    this.processes.add(process);
     System.out.println(this.processes);
     if(this.currentUserProcess == null) {
       switchProcess();
@@ -49,6 +49,14 @@ public class Scheduler {
     if(!this.processes.isEmpty()) {
         this.currentUserProcess = this.processes.removeFirst();
     }
+  }
+
+  /**
+   * Puts a process to "sleep" (inactive) for a set duration
+   * @param duration time in milliseconds that the process is going to sleep
+   */
+  public void sleep(int duration) {
+    System.out.println("sleep");
   }
 
   /**

@@ -12,7 +12,9 @@ public class Kernel extends Process {
                   OS.returnValue = createProcess(newProcess);
               }
               case switchProcess -> switchProcess();
+              case sleep -> sleep((int) OS.parameters.getFirst());
           }
+          System.out.println(this.scheduler.currentUserProcess.name + ": " + this.scheduler.currentUserProcess.isSemaphoreAcquired());
           this.scheduler.currentUserProcess.start();
           try {
               this.stop();
@@ -37,6 +39,12 @@ public class Kernel extends Process {
   public void switchProcess() {
       this.scheduler.switchProcess();
   }
+
+    /**
+     * Puts a process to "sleep" (inactive) for a set duration
+     * @param duration time in milliseconds that the process is going to sleep
+     */
+  public void sleep(int duration) {this.scheduler.sleep(duration);}
 
   /**
    * Checks if there is any processes running

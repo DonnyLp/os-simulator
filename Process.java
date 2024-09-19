@@ -30,6 +30,11 @@ public abstract class Process implements Runnable {
     return this.counter.availablePermits() == 0;
   }
 
+    /**
+     * Ensures that the thread is permitted to run i.e. the semaphore count is > 0
+     * @return true if the semaphore count is 1, false otherwise
+     */
+  public boolean isPermitted() { return this.counter.availablePermits() > 0;}
   /**
    *  Check whether this process is done i.e. the thread is not alive
    *  @return true if the thread is active, false otherwise
