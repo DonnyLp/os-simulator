@@ -76,6 +76,8 @@ public abstract class Process implements Runnable {
     if(quantumExpired) {
         quantumExpired = false;
         OS.switchProcess();
+    } else {
+        System.out.println("quantam hasn't expired");
     }
   }
 

@@ -13,7 +13,14 @@ public class OS {
   public enum CallType {
     createProcess,
     switchProcess,
-    sleep
+    sleep,
+    exit
+  }
+
+  public enum Priority {
+    realTime,
+    interactive,
+    background
   }
 
   /**
@@ -21,8 +28,8 @@ public class OS {
    * @param newUserlandProcess the userland process that is set to be created
    * @return index of the new process
    */
-  public static int createProcess(UserlandProcess newUserlandProcess) throws InterruptedException {
-    setupSystemCall(CallType.createProcess, newUserlandProcess);
+  public static int createProcess(UserlandProcess newUserlandProcess, Priority priority) throws InterruptedException {
+    setupSystemCall(CallType.createProcess, newUserlandProcess, priority);
     return (int) returnValue;
   }
 
@@ -32,8 +39,8 @@ public class OS {
    */
   public static void startup(UserlandProcess initialProcess) throws InterruptedException {
     kernel = new Kernel();
-    createProcess(initialProcess);
-    createProcess(new Idle());
+    createProcess(initialProcess, Priority.interactive);
+    createProcess(new Idle(), Priority.background);
   }
 
   /**
@@ -49,6 +56,13 @@ public class OS {
    */
   public static void sleep(int duration) throws InterruptedException {
     setupSystemCall(CallType.sleep, duration);
+  }
+
+  /**
+   * Unschedule the current user process
+   */
+  public static void exit() throws InterruptedException {
+    setupSystemCall(CallType.exit);
   }
 
   /**
