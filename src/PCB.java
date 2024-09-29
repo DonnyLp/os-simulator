@@ -59,21 +59,40 @@ public class PCB {
     public String toString() {
         return this.name;
     }
+
+    /**
+     * Sets the minimum wakeup time of the process.
+     * @param minWakeUp the minimum wakeup time of the process
+     */
     public void setMinWakeUp(long minWakeUp) {
         this.minWakeUp = minWakeUp;
     }
+
+    /**
+     * Returns the process' id
+     * @return the process' id
+     */
     public int getPID() {
         return this.PID;
     }
 
+    /**
+     * Returns the priority level of the process
+     * @return the priority level of the process
+     */
     public OS.Priority getPriority() { return this.priority; }
+
+    /**
+     * Sets the priority level of the process
+     * @param priority the priority level of the process
+     */
     public void setPriority(OS.Priority priority) { this.priority = priority;}
 
+    /**
+     * Checks whether the current process is an Init process
+     * @return true if it's an Init process, otherwise false
+     */
     public boolean isInit() {
         return this.userlandProcess instanceof Init;
-    }
-
-  public boolean isPermitted() {
-    return this.userlandProcess.isPermitted();
     }
 }

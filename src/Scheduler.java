@@ -235,6 +235,10 @@ public class Scheduler {
     return this.backgroundProcesses.isEmpty();
   }
 
+  /**
+   * Helper that prints the process that has been chosen
+   * @param process the current userland process
+   */
   public void printChoseProcess(PCB process) {
     System.out.println(process + " starting...");
   }
