@@ -9,9 +9,12 @@ public class Kernel extends Process {
           switch(OS.currentCall) {
               case createProcess -> {
                   UserlandProcess newProcess = (UserlandProcess)OS.parameters.getFirst();
-                  OS.returnValue = createProcess(newProcess);
+                  OS.Priority priority = (OS.Priority) OS.parameters.getLast();
+                  OS.returnValue = this.scheduler.createProcess(newProcess, priority);
               }
-              case switchProcess -> switchProcess();
+              case switchProcess -> this.scheduler.switchProcess();
+              case sleep -> this.scheduler.sleep((int)OS.parameters.getFirst());
+              case exit -> this.scheduler.exit();
           }
           this.scheduler.currentUserProcess.start();
           try {
@@ -21,23 +24,6 @@ public class Kernel extends Process {
           }
       }
   }
-
-    /**
-     * Create process by calling the scheduler's version of createProcess
-     * @param process the new process to be created
-     * @return process ID
-     */
-  public int createProcess(UserlandProcess process) {
-      return this.scheduler.createProcess(process);
-  }
-
-    /**
-     * Switch the current process with the next process waiting in queue
-     */
-  public void switchProcess() {
-      this.scheduler.switchProcess();
-  }
-
   /**
    * Checks if there is any processes running
    * @return true if there is a process running, false otherwise
@@ -46,6 +32,10 @@ public class Kernel extends Process {
       return this.scheduler.currentUserProcess != null;
   }
 
+    /**
+     * Stops the process the is currently running
+     * @throws InterruptedException
+     */
   public void stopCurrentlyRunning() throws InterruptedException {
       this.scheduler.currentUserProcess.stop();
   }
