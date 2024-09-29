@@ -2,9 +2,9 @@ public class ExitTest extends UserlandProcess{
     @Override
     public void main() {
         try {
-            System.out.println("This is a test process for the exit kernel call");
+            System.out.println("Testing exit call, but lets sleep first...");
             OS.sleep(50);
-            System.out.println("Exiting....");
+            System.out.println("Woke up and now exiting....");
             OS.exit();
             cooperate();
             Thread.sleep(50);

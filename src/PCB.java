@@ -57,17 +57,13 @@ public class PCB {
     }
     @Override
     public String toString() {
-        return this.name + this.PID;
+        return this.name;
     }
     public void setMinWakeUp(long minWakeUp) {
         this.minWakeUp = minWakeUp;
     }
     public int getPID() {
         return this.PID;
-    }
-
-    public String getName() {
-        return this.name + " process";
     }
 
     public OS.Priority getPriority() { return this.priority; }

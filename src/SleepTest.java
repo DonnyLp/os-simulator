@@ -6,8 +6,8 @@ public class SleepTest extends UserlandProcess{
                 System.out.println("Going to sleep......");
                 OS.sleep(50);
                 System.out.println("I woke up!!!!!");
+                OS.exit();
                 cooperate();
-                Thread.sleep(50);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

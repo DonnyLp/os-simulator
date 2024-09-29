@@ -55,27 +55,32 @@ public class Scheduler {
    * Switch the current process with the next process waiting in queue
    */
   public void switchProcess() {
+    System.out.println("Switching...");
     int oldPID = 0; //holds the PID of the process that's being switched out
-    if (this.currentUserProcess != null && !this.currentUserProcess.isDone()) {
-      oldPID = this.currentUserProcess.getPID();
-      addProcess(this.currentUserProcess);
-    }
     //check if any processes need to be woken up and give them a chance to run
     for(PCB process: this.waitingProcesses) {
       if(process.wakeUp(clock.millis())) {
         addProcess(process);
+        this.waitingProcesses.remove(process);
       }
     }
+    //capture the current PID and add it to the list
+    if (this.currentUserProcess != null && !this.currentUserProcess.isDone()) {
+      oldPID = this.currentUserProcess.getPID();
+      addProcess(this.currentUserProcess);
+    }
     this.currentUserProcess = getNextProcess();
-    if(oldPID == this.currentUserProcess.getPID()) {
+    //compare the previous process with the new process for demotion case
+    if(this.currentUserProcess != null && oldPID == this.currentUserProcess.getPID()) {
       this.demotionCounter++;
     } else {
       this.demotionCounter = 0;
     }
+    //handle demotion case
     if(demotionCounter > 5) {
-      System.out.println("Demoting " + this.currentUserProcess.getName() + " with priority: " + this.currentUserProcess.getPriority());
+      System.out.println("Demoting " + this.currentUserProcess + " with priority: " + this.currentUserProcess.getPriority());
       demoteProcess(this.currentUserProcess);
-      System.out.println("Demoted " + this.currentUserProcess.getName() + " to " + this.currentUserProcess.getPriority());
+      System.out.println("Demoted " + this.currentUserProcess + " to: " + this.currentUserProcess.getPriority() + " priority");
     }
   }
 
@@ -87,6 +92,7 @@ public class Scheduler {
     long minWakeUp = (duration + clock.millis());
     this.currentUserProcess.setMinWakeUp(minWakeUp);
     this.waitingProcesses.add(this.currentUserProcess);
+    this.currentUserProcess = null;
     switchProcess();
   }
 
@@ -97,7 +103,6 @@ public class Scheduler {
     this.currentUserProcess = getNextProcess();
   }
 
-
   /**
    * Demotes the passed in userland process
    */
@@ -105,6 +110,7 @@ public class Scheduler {
     switch(process.getPriority()) {
       case realTime -> process.setPriority(OS.Priority.interactive);
       case interactive -> process.setPriority(OS.Priority.background);
+      case background -> System.out.println("Cannot demote");
     }
   }
   /**
@@ -119,66 +125,60 @@ public class Scheduler {
     }
   }
   /**
+   * Using a probabilistic model to get the next process to run
+   * @return PCB next process to be run
+   */
+  private PCB getNextProcess() {
+    PCB process = null;
+    while(process == null) {
+      int randomNumber = rand.nextInt(101);
+      System.out.println("\n");
+      System.out.println("realtime processes: "+ this.realTimeProcesses);
+      System.out.println("interactive processes: " + this.interactiveProcesses);
+      System.out.println("background processes: "+ this.backgroundProcesses);
+
+      switch(setProbabilisticMode()) {
+        case 1 -> {
+          if(randomNumber <= 60) {
+            process = getRealtimeProcess();
+            printChoseProcess(process);
+          }
+          else if(randomNumber <= 90 && !isInteractiveEmpty()) {
+            process = interactiveProcesses.pop();
+            printChoseProcess(process);
+          } else if(!isBackgroundEmpty()){
+            process = getBackgroundProcess();
+            printChoseProcess(process);
+          } else {
+            System.out.println("No processes chosen. Rerun!");
+          }
+        }
+        case 2 -> {
+          if(randomNumber <= 75) {
+            process = getInteractiveProcess();
+            printChoseProcess(process);
+          } else if(!isBackgroundEmpty()) {
+            process = getBackgroundProcess();
+            printChoseProcess(process);
+          } else {
+            System.out.println("No processes chosen. Rerun!");
+          }
+        }
+        case 3 -> {
+          process = getBackgroundProcess();
+          printChoseProcess(process);
+        }
+      }
+    }
+    return process;
+  }
+
+  /**
    * Gets the head of the realtime process list
    * @return PCB head of the realtime process list
    */
   public PCB getRealtimeProcess() {
     return this.realTimeProcesses.removeFirst();
-  }
-
-  /**
-   * Gets the head of the interactive process list
-   * @return PCB head of the interactive process list
-   */
-  public PCB getInteractiveProcess() {
-    return this.interactiveProcesses.removeFirst();
-  }
-
-  /**
-   * Gets the head of the background process list
-   * @return PCB head of the background process list
-   */
-  public PCB getBackgroundProcess() {
-    return this.backgroundProcesses.removeFirst();
-  }
-  /**
-   * Using a probabilistic model to get the next process to run
-   * @return PCB next process to be run
-   */
-  private PCB getNextProcess() {
-    int randomNumber = rand.nextInt(101);
-    PCB process = null;
-    switch(setProbabilisticMode()) {
-      case 1 -> {
-        if(randomNumber <= 60) {
-          process = getRealtimeProcess();
-          printChosenProcess(process);
-        }
-        else if(randomNumber <= 90) {
-          process = getInteractiveProcess();
-          printChosenProcess(process);
-        } else {
-          process = getBackgroundProcess();
-          printChosenProcess(process);
-        }
-      }
-      case 2 -> {
-        System.out.println("Prioritizing interactive");
-        if(randomNumber <= 75) {
-          process = getInteractiveProcess();
-          printChosenProcess(process);
-        } else {
-          process = getBackgroundProcess();
-          printChosenProcess(process);
-        }
-      }
-      case 3 -> {
-        System.out.println("Only background processes");
-        process = getBackgroundProcess();
-        printChosenProcess(process);
-      }
-    }
-    return process;
   }
 
   /**
@@ -195,6 +195,21 @@ public class Scheduler {
       modeNumber =  3;
     }
     return modeNumber;
+  }
+  /**
+   * Gets the head of the interactive process list
+   * @return PCB head of the interactive process list
+   */
+  public PCB getInteractiveProcess() {
+    return this.interactiveProcesses.removeFirst();
+  }
+
+  /**
+   * Gets the head of the background process list
+   * @return PCB head of the background process list
+   */
+  public PCB getBackgroundProcess() {
+    return this.backgroundProcesses.removeFirst();
   }
   /**
    * Checks if the realtime processes list is empty
@@ -220,7 +235,7 @@ public class Scheduler {
     return this.backgroundProcesses.isEmpty();
   }
 
-  private void printChosenProcess(PCB process) {
-    System.out.println(process.getName() + " has been chosen");
+  public void printChoseProcess(PCB process) {
+    System.out.println(process + " starting...");
   }
 }
