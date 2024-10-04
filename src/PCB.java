@@ -1,19 +1,22 @@
+import java.util.Arrays;
+
 public class PCB {
 
     private final UserlandProcess userlandProcess;
     private final String name;
     private final int PID;
-
     private OS.Priority priority;
-
     private long minWakeUp;
     public static int nextPID;
+    private final int[] deviceIds;
 
     public PCB(UserlandProcess userlandProcess, int PID, OS.Priority priority) {
         this.userlandProcess = userlandProcess;
         this.PID = PID;
         this.priority = priority;
         this.name = userlandProcess.name;
+        deviceIds = new int[10];
+        Arrays.fill(deviceIds, -1);
     }
 
     /**
@@ -77,6 +80,45 @@ public class PCB {
     }
 
     /**
+     * Get the device ids
+     * @return the device ids
+     */
+    public int[] getDeviceIds() {
+        return this.deviceIds;
+    }
+
+    /**
+     * Close all open devices i.e. clear the deviceIds
+     */
+    public void closeDevices(VFS fileSystem) {
+        System.out.println("Exiting, attempting to clear all active devices....");
+        for(int i = 0; i < deviceIds.length; i++) {
+            if(deviceIds[i] != -1) {
+                fileSystem.close(deviceIds[i]);
+                deviceIds[i] = -1;
+            }
+        }
+        System.out.println("All devices cleared: " + isDeviceCleared());
+    }
+
+    private boolean isDeviceCleared() {
+        for (int deviceId : deviceIds) {
+            if (deviceId == -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public int appendId(int id) {
+        for(int i = 0; i < deviceIds.length; i++) {
+            if(deviceIds[i] == -1) {
+                deviceIds[i] = id;
+                return i;
+            }
+        }
+        return -1;
+    }
+    /**
      * Returns the priority level of the process
      * @return the priority level of the process
      */
@@ -88,6 +130,13 @@ public class PCB {
      */
     public void setPriority(OS.Priority priority) { this.priority = priority;}
 
+    /**
+     * Get the userland processes' name
+     * @return name of the userland process
+     */
+    public String getName() {
+        return this.userlandProcess.name;
+    }
     /**
      * Checks whether the current process is an Init process
      * @return true if it's an Init process, otherwise false

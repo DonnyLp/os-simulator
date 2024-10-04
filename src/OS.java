@@ -14,6 +14,11 @@ public class OS {
     createProcess,
     switchProcess,
     sleep,
+    open,
+    write,
+    read,
+    seek,
+    close,
     exit
   }
 
@@ -59,7 +64,52 @@ public class OS {
   }
 
   /**
-   * Unschedule the current user process
+   * Open a new device
+   * @param args device type and arguments to be passed to specified device
+   */
+  public static int open(String args) throws InterruptedException {
+    setupSystemCall(CallType.open, args);
+    return (int) returnValue;
+  }
+
+  /**
+   * Close the specified device
+   * @param id the device id
+   */
+  public static void close(int id) throws InterruptedException {
+    setupSystemCall(CallType.close, id);
+  }
+  /**
+    * Read from the device
+   * @param id the device id
+   * @param size the size of the data to read
+   */
+  public static byte[] read(int id, int size) throws InterruptedException {
+    setupSystemCall(CallType.read, id, size);
+    return (byte[]) returnValue;
+  }
+
+  /**
+   * Seek to a position in the device
+   * @param id the device id
+   * @param to the position to seek to
+   */
+  public static void seek(int id, int to) throws InterruptedException{
+    setupSystemCall(CallType.seek, id, to);
+  }
+
+  /**
+   * Write to the device
+   * @param id the device id
+   * @param data data to write to the device
+   */
+  public static int write(int id, byte[] data) throws InterruptedException {
+    setupSystemCall(CallType.write, id, data);
+    return (int) returnValue;
+  }
+
+  /**
+   * Unschedule the current process, so it never gets ran again
    */
   public static void exit() throws InterruptedException {
     setupSystemCall(CallType.exit);

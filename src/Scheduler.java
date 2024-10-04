@@ -1,8 +1,5 @@
-import java.util.LinkedList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.time.Clock;
-import java.util.Random;
 
 public class Scheduler {
 
@@ -16,7 +13,9 @@ public class Scheduler {
   private final Clock clock;
   private int demotionCounter;
 
-  public Scheduler() {
+  private Kernel kernel;
+
+  public Scheduler(Kernel kernel) {
     this.realTimeProcesses = new LinkedList<>();
     this.interactiveProcesses = new LinkedList<>();
     this.backgroundProcesses = new LinkedList<>();
@@ -24,6 +23,7 @@ public class Scheduler {
     this.clock = Clock.systemDefaultZone();
     this.demotionCounter = -1;
     this.rand = new Random();
+    this.kernel = kernel;
     timer = new Timer();
       timer.scheduleAtFixedRate(new TimerTask() {
         @Override
@@ -58,10 +58,12 @@ public class Scheduler {
     System.out.println("Switching...");
     int oldPID = 0; //holds the PID of the process that's being switched out
     //check if any processes need to be woken up and give them a chance to run
-    for(PCB process: this.waitingProcesses) {
+    Iterator<PCB> iterator = this.waitingProcesses.iterator();
+    while(iterator.hasNext()) {
+      PCB process = iterator.next();
       if(process.wakeUp(clock.millis())) {
         addProcess(process);
-        this.waitingProcesses.remove(process);
+        iterator.remove();
       }
     }
     //capture the current PID and add it to the list
@@ -89,6 +91,7 @@ public class Scheduler {
    * @param duration time in milliseconds that the process is going to sleep
    */
   public void sleep(int duration) {
+    System.out.println(this.currentUserProcess.getName() + " going to sleep...");
     long minWakeUp = (duration + clock.millis());
     this.currentUserProcess.setMinWakeUp(minWakeUp);
     this.waitingProcesses.add(this.currentUserProcess);
@@ -100,6 +103,7 @@ public class Scheduler {
    * Unschedule the current process, so it never gets ran again
    */
   public void exit() {
+    this.currentUserProcess.closeDevices(kernel.getFileSystem()); // close call open devices
     this.currentUserProcess = getNextProcess();
   }
 
