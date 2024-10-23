@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class PCB {
 
@@ -9,6 +10,7 @@ public class PCB {
     private long minWakeUp;
     public static int nextPID;
     private final int[] deviceIds;
+    private LinkedList<KernelMessage> messageQueue;
 
     public PCB(UserlandProcess userlandProcess, int PID, OS.Priority priority) {
         this.userlandProcess = userlandProcess;
@@ -17,6 +19,7 @@ public class PCB {
         this.name = userlandProcess.name;
         deviceIds = new int[10];
         Arrays.fill(deviceIds, -1);
+        this.messageQueue = new LinkedList<>();
     }
 
     /**
@@ -58,6 +61,7 @@ public class PCB {
     public boolean isDone() {
         return this.userlandProcess.isDone();
     }
+
     @Override
     public String toString() {
         return this.name;
@@ -101,14 +105,24 @@ public class PCB {
         System.out.println("All devices cleared: " + isDeviceCleared());
     }
 
+    /**
+     * Check if all devices are cleared i.e. closed
+     * @return true if all devices are close otherwise false
+     */
     private boolean isDeviceCleared() {
         for (int deviceId : deviceIds) {
-            if (deviceId == -1) {
-                return true;
+            if (deviceId != -1) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
+
+    /**
+     * Add a device ID to the list of IDs
+     * @param id the device id
+     * @return the index at which the id was stored, -1 if there is no empty space
+     */
     public int appendId(int id) {
         for(int i = 0; i < deviceIds.length; i++) {
             if(deviceIds[i] == -1) {
@@ -117,6 +131,14 @@ public class PCB {
             }
         }
         return -1;
+    }
+
+    /**
+     * Add an incoming message to the message queue
+     * @param message the message to be queued
+     */
+    public void queueMessage (KernelMessage message) {
+        this.messageQueue.add(message);
     }
     /**
      * Returns the priority level of the process
@@ -137,6 +159,7 @@ public class PCB {
     public String getName() {
         return this.userlandProcess.name;
     }
+
     /**
      * Checks whether the current process is an Init process
      * @return true if it's an Init process, otherwise false

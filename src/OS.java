@@ -19,7 +19,7 @@ public class OS {
     read,
     seek,
     close,
-    exit
+    getPID, getPIDByName, sendMessage, waitForMessage, exit
   }
 
   public enum Priority {
@@ -106,6 +106,40 @@ public class OS {
   public static int write(int id, byte[] data) throws InterruptedException {
     setupSystemCall(CallType.write, id, data);
     return (int) returnValue;
+  }
+
+  /**
+   * Get the current process' id
+   * @return the current process id
+   */
+  public static int getPID() throws InterruptedException {
+    setupSystemCall(CallType.getPID);
+    return (int) returnValue;
+  }
+
+  /**
+   * Get the process id by its name
+   * @return the process id
+   */
+  public static int getPIDByName(String processName) throws InterruptedException {
+    setupSystemCall(CallType.getPIDByName, processName);
+    return (int) returnValue;
+  }
+
+  /**
+   * Send a message to a process
+   */
+  public static void sendMessage (KernelMessage message) throws InterruptedException {
+    setupSystemCall(CallType.sendMessage, message);
+  }
+
+  /**
+   * Wait for an incoming message from a process
+   * @return the current process' kernel message
+   */
+  public static KernelMessage waitForMessage() throws InterruptedException{
+    setupSystemCall(CallType.waitForMessage);
+    return (KernelMessage) returnValue;
   }
 
   /**

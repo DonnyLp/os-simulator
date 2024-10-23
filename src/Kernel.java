@@ -1,11 +1,12 @@
 public class Kernel extends Process implements Device{
   private final Scheduler scheduler;
-  private VFS fileSystem;
+  private final VFS fileSystem;
 
   public Kernel() {
     this.scheduler = new Scheduler(this);
     this.fileSystem = new VFS();
   }
+
   @Override
   public void main() {
       while(true) {
@@ -25,9 +26,11 @@ public class Kernel extends Process implements Device{
               case write -> {
                   OS.returnValue = write((int) OS.parameters.getFirst(), (byte[]) OS.parameters.getLast());
               }
+              case getPID -> OS.returnValue = this.scheduler.getPID();
               case close -> close((int) OS.parameters.getFirst());
               case switchProcess -> this.scheduler.switchProcess();
               case sleep -> this.scheduler.sleep((int)OS.parameters.getFirst());
+              case sendMessage -> this.scheduler.sendMessage((KernelMessage) OS.parameters.getFirst());
               case exit -> this.scheduler.exit();
           }
           this.scheduler.currentUserProcess.start();
