@@ -12,6 +12,7 @@ public class Scheduler {
   private LinkedList<PCB> interactiveProcesses;
   private LinkedList<PCB> backgroundProcesses;
   private LinkedList<PCB> waitingProcesses;
+  private HashMap <Integer, PCB> processesWaitingForMessage;
   private HashMap<Integer, PCB> PCBs;
 
   private Kernel kernel;
@@ -99,21 +100,6 @@ public class Scheduler {
   }
 
   /**
-   * Send a message to another process
-   */
-  public void sendMessage(KernelMessage message) {
-    message.setSenderPID(getPID());
-    KernelMessage messageCopy = new KernelMessage(message);
-    PCB targetPCB = this.PCBs.get(message.getReceiverPID());
-
-    if(targetPCB == null) {
-      throw new KernelException("PCB with PID: " + message.getReceiverPID() + " doesn't exist.");
-    }
-
-    targetPCB.queueMessage(message);
-  }
-
-  /**
    * Unschedule the current process, so it never gets ran again
    */
   public void exit() {
@@ -141,6 +127,22 @@ public class Scheduler {
       }
     }
     return -1;
+  }
+
+  /**
+   * Grabs the userland process with the specified ID
+   * @params PID process' ID
+   * @return the userland process with specified ID, otherwise returns if the PCB with the ID doesn't exist
+   */
+  public PCB getProcessByID (int PID){
+    return this.PCBs.get(PID);
+  }
+
+  /**
+   * Enqueues a process that is waiting for a message
+   */
+  public void queueProcess(PCB process) {
+
   }
 
   /**
@@ -237,6 +239,7 @@ public class Scheduler {
     }
     return modeNumber;
   }
+
   /**
    * Gets the head of the interactive process list
    * @return PCB head of the interactive process list

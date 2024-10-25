@@ -134,6 +134,17 @@ public class PCB {
     }
 
     /**
+     * Check if this process has a message in its message queue
+     * @return the first message in the message queue, otherwise returns null if there is no messages in queue
+     */
+    public KernelMessage getMessage() {
+        if(this.messageQueue.isEmpty()) {
+            return null;
+        }
+        return this.messageQueue.pop();
+    }
+
+    /**
      * Add an incoming message to the message queue
      * @param message the message to be queued
      */

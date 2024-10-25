@@ -30,7 +30,10 @@ public class Kernel extends Process implements Device{
               case close -> close((int) OS.parameters.getFirst());
               case switchProcess -> this.scheduler.switchProcess();
               case sleep -> this.scheduler.sleep((int)OS.parameters.getFirst());
-              case sendMessage -> this.scheduler.sendMessage((KernelMessage) OS.parameters.getFirst());
+              case sendMessage -> sendMessage((KernelMessage) OS.parameters.getFirst());
+              case waitForMessage -> {
+                  OS.returnValue = waitForMessage();
+              }
               case exit -> this.scheduler.exit();
           }
           this.scheduler.currentUserProcess.start();
@@ -41,6 +44,35 @@ public class Kernel extends Process implements Device{
           }
       }
   }
+
+    /**
+     * Send a message to another process
+     */
+    public void sendMessage(KernelMessage message) {
+        message.setSenderPID(getCurrentUserProcess().getPID());
+        KernelMessage messageCopy = new KernelMessage(message);
+        PCB targetPCB = this.scheduler.getProcessByID(message.getReceiverPID());
+
+        if(targetPCB == null) {
+            throw new KernelException("PCB with PID: " + message.getReceiverPID() + " doesn't exist.");
+        }
+
+        //add message to target's queue
+        targetPCB.queueMessage(message);
+    }
+
+    public KernelMessage waitForMessage() {
+        KernelMessage message = null;
+        //check if the current process has a message in the queue
+        message = getCurrentUserProcess().getMessage();
+
+        if(message == null) {
+            //deschedule from current runnable queue i.e. list and add to waiting queue
+        }
+        return message;
+    }
+
+
   /**
    * Checks if there is any processes running
    * @return true if there is a process running, false otherwise
