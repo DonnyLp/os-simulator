@@ -27,13 +27,12 @@ public class Kernel extends Process implements Device{
                   OS.returnValue = write((int) OS.parameters.getFirst(), (byte[]) OS.parameters.getLast());
               }
               case getPID -> OS.returnValue = this.scheduler.getPID();
+              case getPIDByName -> OS.returnValue = this.scheduler.getPIDByName((String) OS.parameters.getFirst());
               case close -> close((int) OS.parameters.getFirst());
               case switchProcess -> this.scheduler.switchProcess();
               case sleep -> this.scheduler.sleep((int)OS.parameters.getFirst());
               case sendMessage -> sendMessage((KernelMessage) OS.parameters.getFirst());
-              case waitForMessage -> {
-                  OS.returnValue = waitForMessage();
-              }
+              case waitForMessage -> OS.returnValue = waitForMessage();
               case exit -> this.scheduler.exit();
           }
           this.scheduler.currentUserProcess.start();
@@ -47,10 +46,11 @@ public class Kernel extends Process implements Device{
 
     /**
      * Send a message to another process
+     * @param message the message to be sent to the receiver
      */
     public void sendMessage(KernelMessage message) {
+        KernelMessage messageCopy = new KernelMessage(message); //what is being done with the message copy
         message.setSenderPID(getCurrentUserProcess().getPID());
-        KernelMessage messageCopy = new KernelMessage(message);
         PCB targetPCB = this.scheduler.getProcessByID(message.getReceiverPID());
 
         if(targetPCB == null) {
@@ -59,15 +59,26 @@ public class Kernel extends Process implements Device{
 
         //add message to target's queue
         targetPCB.queueMessage(message);
+
+        //restore targetPCB to runnable queue if it's waiting for a message
+        if(this.scheduler.isWaitingForMessage(targetPCB)) {
+            this.scheduler.removeFromMessageQueue(targetPCB);
+            this.scheduler.addProcess(targetPCB);
+        }
     }
 
+    /**
+     * Handles the current process' message
+     * if there isn't one then current process is added to a waiting queue
+     * @return the current process' message
+     */
     public KernelMessage waitForMessage() {
         KernelMessage message = null;
         //check if the current process has a message in the queue
         message = getCurrentUserProcess().getMessage();
-
         if(message == null) {
-            //deschedule from current runnable queue i.e. list and add to waiting queue
+            //deschedules from current runnable queue and adds to waiting queue
+            this.scheduler.addToMessageQueue();
         }
         return message;
     }

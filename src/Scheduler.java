@@ -131,7 +131,7 @@ public class Scheduler {
 
   /**
    * Grabs the userland process with the specified ID
-   * @params PID process' ID
+   * @param PID process' ID
    * @return the userland process with specified ID, otherwise returns if the PCB with the ID doesn't exist
    */
   public PCB getProcessByID (int PID){
@@ -139,10 +139,42 @@ public class Scheduler {
   }
 
   /**
-   * Enqueues a process that is waiting for a message
+   * Check if this process is waiting for a message
+   * @return true if the given process is waiting for a message, false otherwise
    */
-  public void queueProcess(PCB process) {
+  public boolean isWaitingForMessage(PCB process) {
+    if(this.processesWaitingForMessage.isEmpty()) {
+      return false;
+    }
+    return this.processesWaitingForMessage.containsKey(process.getPID());
+  }
+  /**
+   * Add the current process to the message waiting queue
+   */
+  public void addToMessageQueue() {
+    this.processesWaitingForMessage.put(getPID(), this.currentUserProcess);
+    this.currentUserProcess = null; //make sure it doesn't get it added back to the runnable queue
+    switchProcess();
+  }
 
+  /**
+   * Removes the given process from the message waiting queue
+   */
+  public void removeFromMessageQueue(PCB process) {
+    this.processesWaitingForMessage.remove(process.getPID());
+  }
+
+  /**
+   * Append a process to a queue depending on its priority
+   * @param process the process to be added to queue
+   */
+  public void addProcess(PCB process) {
+    switch (process.getPriority()) {
+      case realTime -> this.realTimeProcesses.add(process);
+      case interactive -> this.interactiveProcesses.add(process);
+      case background  -> this.backgroundProcesses.add(process);
+    }
+    this.PCBs.put(process.getPID(), process); //add to map for messaging
   }
 
   /**
@@ -155,18 +187,7 @@ public class Scheduler {
       case background -> System.out.println("Cannot demote");
     }
   }
-  /**
-   * Helper method that will add the process to correct queue depending on its priority
-   * @param process the process to be added to queue
-   */
-  private void addProcess(PCB process) {
-    switch (process.getPriority()) {
-      case realTime -> this.realTimeProcesses.add(process);
-      case interactive -> this.interactiveProcesses.add(process);
-      case background  -> this.backgroundProcesses.add(process);
-    }
-    this.PCBs.put(process.getPID(), process); //add to map for messaging
-  }
+
   /**
    * Using a probabilistic model to get the next process to run
    * @return PCB next process to be run
@@ -287,6 +308,7 @@ public class Scheduler {
     this.interactiveProcesses = new LinkedList<>();
     this.backgroundProcesses = new LinkedList<>();
     this.waitingProcesses = new LinkedList<>();
+    this.processesWaitingForMessage = new HashMap<>();
     this.PCBs = new HashMap<>();
   }
   /**

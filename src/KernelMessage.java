@@ -41,6 +41,6 @@ public class KernelMessage {
 
     @Override
     public String toString() {
-        return "Message from: " + this.senderPID + " sending to: " + receiverPID;
+        return  "from: " + this.senderPID + " to: " + receiverPID;
     }
 }
