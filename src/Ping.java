@@ -1,16 +1,24 @@
+import java.nio.ByteBuffer;
+
 public class Ping extends UserlandProcess {
 
     @Override
     public void main() {
-        System.out.println("I am PING");
-        String messageData = "PING";
-        KernelMessage incomingMessage = null;
+        String messageData = "ping is a userland process in this os";
+        int counter = 0;
         try {
-           int receiverPID = OS.getPIDByName("Pong");
-           KernelMessage newMessage = new KernelMessage(0, messageData.getBytes(), 0, receiverPID);
-           OS.sendMessage(newMessage);
-           incomingMessage = OS.waitForMessage();
-           System.out.println("Ping: " + incomingMessage);
+           while(true) {
+               int receiverPID = OS.getPIDByName("Pong");
+               ByteBuffer intBuffer = ByteBuffer.allocate(4);
+               intBuffer.putInt(counter);
+               KernelMessage newMessage = new KernelMessage(0, messageData.getBytes(), 0, receiverPID);
+               counter++;
+               OS.sendMessage(newMessage);
+               KernelMessage incomingMessage = OS.waitForMessage();
+               System.out.println("PING:" + incomingMessage);
+               Thread.sleep(300);
+               cooperate();
+           }
         } catch(InterruptedException e) {
             throw new RuntimeException(e);
         }

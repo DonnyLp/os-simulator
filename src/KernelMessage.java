@@ -1,3 +1,6 @@
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 public class KernelMessage {
     private int senderPID;
     private int receiverPID;
@@ -41,6 +44,6 @@ public class KernelMessage {
 
     @Override
     public String toString() {
-        return  "from: " + this.senderPID + " to: " + receiverPID;
+        return " from: " + this.senderPID + " to: " + receiverPID;
     }
 }

@@ -55,7 +55,7 @@ public class Scheduler {
    * Switch the current process with the next process waiting in queue
    */
   public void switchProcess() {
-    System.out.println("Switching...");
+//    System.out.println("Switching...");
     int oldPID = 0; //holds the PID of the process that's being switched out
     //check if any processes need to be woken up and give them a chance to run
     Iterator<PCB> iterator = this.waitingProcesses.iterator();
@@ -72,6 +72,7 @@ public class Scheduler {
       addProcess(this.currentUserProcess);
     }
     this.currentUserProcess = getNextProcess(); //remove the old process
+
     //compare the previous process with the new process for demotion case
     if(this.currentUserProcess != null && oldPID == this.currentUserProcess.getPID()) {
       this.demotionCounter++;
@@ -148,12 +149,13 @@ public class Scheduler {
     }
     return this.processesWaitingForMessage.containsKey(process.getPID());
   }
+
   /**
    * Add the current process to the message waiting queue
    */
   public void addToMessageQueue() {
     this.processesWaitingForMessage.put(getPID(), this.currentUserProcess);
-    this.currentUserProcess = null; //make sure it doesn't get it added back to the runnable queue
+    this.currentUserProcess = null;
     switchProcess();
   }
 
@@ -196,10 +198,6 @@ public class Scheduler {
     PCB process = null;
     while(process == null) {
       int randomNumber = rand.nextInt(101);
-      System.out.println("\n");
-      System.out.println("realtime processes: "+ this.realTimeProcesses);
-      System.out.println("interactive processes: " + this.interactiveProcesses);
-      System.out.println("background processes: "+ this.backgroundProcesses);
 
       switch(setProbabilisticMode()) {
         case 1 -> {
@@ -316,6 +314,6 @@ public class Scheduler {
    * @param process the current userland process
    */
   private void printChoseProcess(PCB process) {
-    System.out.println(process + " starting...");
+//    System.out.println(process + " starting...");
   }
 }

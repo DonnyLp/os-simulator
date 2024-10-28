@@ -178,4 +178,8 @@ public class PCB {
     public boolean isInit() {
         return this.userlandProcess instanceof Init;
     }
+
+    public boolean isMessageQueueEmpty() {
+        return this.messageQueue.isEmpty();
+    }
 }

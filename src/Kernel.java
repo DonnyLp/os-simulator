@@ -50,15 +50,15 @@ public class Kernel extends Process implements Device{
      */
     public void sendMessage(KernelMessage message) {
         KernelMessage messageCopy = new KernelMessage(message); //what is being done with the message copy
-        message.setSenderPID(getCurrentUserProcess().getPID());
+        messageCopy.setSenderPID(getCurrentUserProcess().getPID());
         PCB targetPCB = this.scheduler.getProcessByID(message.getReceiverPID());
 
         if(targetPCB == null) {
-            throw new KernelException("PCB with PID: " + message.getReceiverPID() + " doesn't exist.");
+            throw new KernelException("PCB with PID: " + messageCopy.getReceiverPID() + " doesn't exist.");
         }
 
         //add message to target's queue
-        targetPCB.queueMessage(message);
+        targetPCB.queueMessage(messageCopy);
 
         //restore targetPCB to runnable queue if it's waiting for a message
         if(this.scheduler.isWaitingForMessage(targetPCB)) {
