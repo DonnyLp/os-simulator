@@ -55,7 +55,7 @@ public class Scheduler {
    * Switch the current process with the next process waiting in queue
    */
   public void switchProcess() {
-//    System.out.println("Switching...");
+    System.out.println("Switching...\n");
     int oldPID = 0; //holds the PID of the process that's being switched out
     //check if any processes need to be woken up and give them a chance to run
     Iterator<PCB> iterator = this.waitingProcesses.iterator();
@@ -314,6 +314,6 @@ public class Scheduler {
    * @param process the current userland process
    */
   private void printChoseProcess(PCB process) {
-//    System.out.println(process + " starting...");
+    System.out.println(process + " starting...");
   }
 }

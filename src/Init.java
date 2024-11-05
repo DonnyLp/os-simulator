@@ -13,10 +13,8 @@ public class Init extends UserlandProcess {
                 OS.createProcess(new GoodbyeWorld(), OS.Priority.interactive);
             }else {
                 System.out.println("We're in test mode");
-                OS.createProcess(new Ping(), OS.Priority.interactive);
-                OS.createProcess(new Pong(), OS.Priority.interactive);
-                OS.createProcess(new HelloWorld(), OS.Priority.interactive);
-                OS.createProcess(new GoodbyeWorld(), OS.Priority.interactive);
+//                OS.createProcess(new DeviceTest(), OS.Priority.interactive);
+                OS.createProcess(new DeviceTest2(), OS.Priority.interactive);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

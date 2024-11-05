@@ -49,7 +49,6 @@ public class FakeFileSystem implements Device{
                 break;
             }
         }
-        clearFiles();
     }
 
     /**
@@ -66,6 +65,7 @@ public class FakeFileSystem implements Device{
         if(currentFile == null) {
             throw new FakeFileSystemException("Couldn't grab the file with id: " + id);
         }
+
         try {
            bytesRead = currentFile.read(buffer,0,size);
         } catch (IOException e) {
@@ -75,6 +75,11 @@ public class FakeFileSystem implements Device{
         if(bytesRead == -1) {
             return null;
         } else {
+            try {
+                currentFile.seek(bytesRead); //update position of the file before
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             return buffer;
         }
     }
@@ -115,13 +120,6 @@ public class FakeFileSystem implements Device{
             throw new RuntimeException(e);
         }
         return (int)(finalBytes - initBytes);
-    }
-
-    /**
-     * Clear all files in the files array
-     */
-    public void clearFiles() {
-        Arrays.fill(files, null);
     }
 
     /**
