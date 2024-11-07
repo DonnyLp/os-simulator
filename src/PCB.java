@@ -12,14 +12,18 @@ public class PCB {
     private final int[] deviceIds;
     private LinkedList<KernelMessage> messageQueue;
 
+    private int[] virtualMemory;
+
     public PCB(UserlandProcess userlandProcess, int PID, OS.Priority priority) {
         this.userlandProcess = userlandProcess;
         this.PID = PID;
         this.priority = priority;
         this.name = userlandProcess.name;
-        deviceIds = new int[10];
-        Arrays.fill(deviceIds, -1);
+        this.deviceIds = new int[10];
         this.messageQueue = new LinkedList<>();
+        this.virtualMemory = new int[100];
+        Arrays.fill(deviceIds, -1);
+        Arrays.fill(virtualMemory, -1);
     }
 
     /**

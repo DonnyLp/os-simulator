@@ -1,10 +1,11 @@
 public class Kernel extends Process implements Device{
   private final Scheduler scheduler;
   private final VFS fileSystem;
-
+  private boolean[] memoryInUse = new boolean[100];
   public Kernel() {
     this.scheduler = new Scheduler(this);
     this.fileSystem = new VFS();
+    this.memoryInUse = new boolean[100];
   }
 
   @Override
@@ -33,6 +34,9 @@ public class Kernel extends Process implements Device{
               case sleep -> this.scheduler.sleep((int)OS.parameters.getFirst());
               case sendMessage -> sendMessage((KernelMessage) OS.parameters.getFirst());
               case waitForMessage -> OS.returnValue = waitForMessage();
+              case getMapping -> getMapping((int) OS.parameters.getFirst());
+              case allocateMemory -> allocateMemory((int) OS.parameters.getFirst());
+              case freeMemory -> OS.returnValue = freeMemory((int) OS.parameters.getFirst(), (int) OS.parameters.getLast());
               case exit -> this.scheduler.exit();
           }
           this.scheduler.currentUserProcess.start();
@@ -168,6 +172,18 @@ public class Kernel extends Process implements Device{
     @Override
     public int write(int id, byte[] data) {
         return fileSystem.write(getCurrentUserProcess().getDeviceIds()[id], data);
+    }
+
+    public void getMapping(int virtualPage) {
+        //PCB changes and update the TLB
+    }
+
+    public void allocateMemory(int size) {
+        //PCB changes and update the TLB
+    }
+
+    public boolean freeMemory(int pointer, int size) {
+        return false;
     }
 
     /**
