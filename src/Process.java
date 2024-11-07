@@ -3,7 +3,6 @@ import java.util.concurrent.Semaphore;
 public abstract class Process implements Runnable {
     public Thread thread;
     public Semaphore counter;
-
     public String name;
     public boolean quantumExpired;
 
@@ -73,6 +72,7 @@ public abstract class Process implements Runnable {
    * Handle the cooperation between processes when the quantum has expired
    */
   public void cooperate() throws InterruptedException {
+
     if(quantumExpired) {
         quantumExpired = false;
         OS.switchProcess();

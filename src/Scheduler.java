@@ -4,27 +4,26 @@ import java.time.Clock;
 public class Scheduler {
 
   public PCB currentUserProcess;
-  private final LinkedList<PCB> realTimeProcesses;
-  private final LinkedList<PCB> interactiveProcesses;
-  private final LinkedList<PCB> backgroundProcesses;
-  private final LinkedList<PCB> waitingProcesses;
   private final Timer timer;
   private final Random rand;
   private final Clock clock;
   private int demotionCounter;
+  private LinkedList<PCB> realTimeProcesses;
+  private LinkedList<PCB> interactiveProcesses;
+  private LinkedList<PCB> backgroundProcesses;
+  private LinkedList<PCB> waitingProcesses;
+  private HashMap <Integer, PCB> processesWaitingForMessage;
+  private HashMap<Integer, PCB> PCBs;
 
   private Kernel kernel;
 
   public Scheduler(Kernel kernel) {
-    this.realTimeProcesses = new LinkedList<>();
-    this.interactiveProcesses = new LinkedList<>();
-    this.backgroundProcesses = new LinkedList<>();
-    this.waitingProcesses = new LinkedList<>();
     this.clock = Clock.systemDefaultZone();
     this.demotionCounter = -1;
     this.rand = new Random();
     this.kernel = kernel;
     timer = new Timer();
+    initializeCollections();
       timer.scheduleAtFixedRate(new TimerTask() {
         @Override
         public void run() {
@@ -40,7 +39,8 @@ public class Scheduler {
    * @return PID of the new process
    */
   public int createProcess(UserlandProcess process, OS.Priority priority) {
-    addProcess(new PCB(process, PCB.nextPID++, priority));
+    PCB newProcess = new PCB(process, PCB.nextPID++, priority);
+    addProcess(newProcess); // add process into one of the priority queues
     if(this.currentUserProcess == null) {
       switchProcess();
     } else {
@@ -55,7 +55,7 @@ public class Scheduler {
    * Switch the current process with the next process waiting in queue
    */
   public void switchProcess() {
-    System.out.println("Switching...");
+    System.out.println("Switching...\n");
     int oldPID = 0; //holds the PID of the process that's being switched out
     //check if any processes need to be woken up and give them a chance to run
     Iterator<PCB> iterator = this.waitingProcesses.iterator();
@@ -71,7 +71,8 @@ public class Scheduler {
       oldPID = this.currentUserProcess.getPID();
       addProcess(this.currentUserProcess);
     }
-    this.currentUserProcess = getNextProcess();
+    this.currentUserProcess = getNextProcess(); //remove the old process
+
     //compare the previous process with the new process for demotion case
     if(this.currentUserProcess != null && oldPID == this.currentUserProcess.getPID()) {
       this.demotionCounter++;
@@ -104,30 +105,91 @@ public class Scheduler {
    */
   public void exit() {
     this.currentUserProcess.closeDevices(kernel.getFileSystem()); // close call open devices
+    this.PCBs.remove(this.currentUserProcess.getPID()); //remove the process from pcb list before deleting
     this.currentUserProcess = getNextProcess();
+  }
+
+  /**
+   * Get the current process' id
+   * @return the current process' id
+   */
+  public int getPID() {
+    return this.currentUserProcess.getPID();
+  }
+
+  /**
+   * Get a process' id according to the name given
+   * @return the current process' id with the given name
+   */
+  public int getPIDByName(String processName) {
+    for(PCB process : this.PCBs.values()) {
+      if (process.getName().compareTo(processName) == 0) {
+          return process.getPID();
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Grabs the userland process with the specified ID
+   * @param PID process' ID
+   * @return the userland process with specified ID, otherwise returns if the PCB with the ID doesn't exist
+   */
+  public PCB getProcessByID (int PID){
+    return this.PCBs.get(PID);
+  }
+
+  /**
+   * Check if this process is waiting for a message
+   * @return true if the given process is waiting for a message, false otherwise
+   */
+  public boolean isWaitingForMessage(PCB process) {
+    if(this.processesWaitingForMessage.isEmpty()) {
+      return false;
+    }
+    return this.processesWaitingForMessage.containsKey(process.getPID());
+  }
+
+  /**
+   * Add the current process to the message waiting queue
+   */
+  public void addToMessageQueue() {
+    this.processesWaitingForMessage.put(getPID(), this.currentUserProcess);
+    this.currentUserProcess = null;
+    switchProcess();
+  }
+
+  /**
+   * Removes the given process from the message waiting queue
+   */
+  public void removeFromMessageQueue(PCB process) {
+    this.processesWaitingForMessage.remove(process.getPID());
+  }
+
+  /**
+   * Append a process to a queue depending on its priority
+   * @param process the process to be added to queue
+   */
+  public void addProcess(PCB process) {
+    switch (process.getPriority()) {
+      case realTime -> this.realTimeProcesses.add(process);
+      case interactive -> this.interactiveProcesses.add(process);
+      case background  -> this.backgroundProcesses.add(process);
+    }
+    this.PCBs.put(process.getPID(), process); //add to map for messaging
   }
 
   /**
    * Demotes the passed in userland process
    */
-  public void demoteProcess(PCB process) {
+  private void demoteProcess(PCB process) {
     switch(process.getPriority()) {
       case realTime -> process.setPriority(OS.Priority.interactive);
       case interactive -> process.setPriority(OS.Priority.background);
       case background -> System.out.println("Cannot demote");
     }
   }
-  /**
-   * Helper method that will add the process to correct queue depending on its priority
-   * @param process the process to be added to queue
-   */
-  private void addProcess(PCB process) {
-    switch (process.getPriority()) {
-      case realTime -> this.realTimeProcesses.add(process);
-      case interactive -> this.interactiveProcesses.add(process);
-      case background  -> this.backgroundProcesses.add(process);
-    }
-  }
+
   /**
    * Using a probabilistic model to get the next process to run
    * @return PCB next process to be run
@@ -136,10 +198,6 @@ public class Scheduler {
     PCB process = null;
     while(process == null) {
       int randomNumber = rand.nextInt(101);
-      System.out.println("\n");
-      System.out.println("realtime processes: "+ this.realTimeProcesses);
-      System.out.println("interactive processes: " + this.interactiveProcesses);
-      System.out.println("background processes: "+ this.backgroundProcesses);
 
       switch(setProbabilisticMode()) {
         case 1 -> {
@@ -181,14 +239,14 @@ public class Scheduler {
    * Gets the head of the realtime process list
    * @return PCB head of the realtime process list
    */
-  public PCB getRealtimeProcess() {
+  private PCB getRealtimeProcess() {
     return this.realTimeProcesses.removeFirst();
   }
 
   /**
    * Determines which the probabilistic mode to get from
    */
-  public int setProbabilisticMode() {
+  private int setProbabilisticMode() {
     int modeNumber = 0;
     if(!isRealTimeEmpty()) {
       modeNumber = 1;
@@ -200,19 +258,20 @@ public class Scheduler {
     }
     return modeNumber;
   }
+
   /**
    * Gets the head of the interactive process list
    * @return PCB head of the interactive process list
    */
-  public PCB getInteractiveProcess() {
+  private PCB getInteractiveProcess() {
     return this.interactiveProcesses.removeFirst();
   }
-
+  
   /**
    * Gets the head of the background process list
    * @return PCB head of the background process list
    */
-  public PCB getBackgroundProcess() {
+  private PCB getBackgroundProcess() {
     return this.backgroundProcesses.removeFirst();
   }
   /**
@@ -240,10 +299,21 @@ public class Scheduler {
   }
 
   /**
+   * Helper method to help consolidate collection initialization in constructor
+   */
+  private void initializeCollections() {
+    this.realTimeProcesses = new LinkedList<>();
+    this.interactiveProcesses = new LinkedList<>();
+    this.backgroundProcesses = new LinkedList<>();
+    this.waitingProcesses = new LinkedList<>();
+    this.processesWaitingForMessage = new HashMap<>();
+    this.PCBs = new HashMap<>();
+  }
+  /**
    * Helper that prints the process that has been chosen
    * @param process the current userland process
    */
-  public void printChoseProcess(PCB process) {
+  private void printChoseProcess(PCB process) {
     System.out.println(process + " starting...");
   }
 }

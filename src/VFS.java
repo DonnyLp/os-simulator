@@ -3,6 +3,8 @@ import java.util.Arrays;
 public class VFS implements Device {
     private final Device[] devices;
     private final int[] ids;
+    FakeFileSystem file = new FakeFileSystem();
+    RandomDevice randomDevice = new RandomDevice();
 
     public VFS() {
         devices = new Device[20];
@@ -24,12 +26,10 @@ public class VFS implements Device {
 
         switch(deviceName) {
             case "random" -> {
-                RandomDevice randomDevice = new RandomDevice();
                 deviceId = randomDevice.open(deviceArgs);
                 vfsIndex = addDevice(deviceId, randomDevice);
             }
             case "file" -> {
-                FakeFileSystem file = new FakeFileSystem();
                 deviceId = file.open(deviceArgs);
                 vfsIndex = addDevice(deviceId, file);
             }
