@@ -153,14 +153,14 @@ public class OS {
    * Gets the virtual address of the current process
    * @param virtualPage the virtual page number
    */
-  public void getMapping(int virtualPage) throws InterruptedException {
+  public static void getMapping(int virtualPage) throws InterruptedException {
     setupSystemCall(CallType.getMapping, virtualPage);
   }
 
   /**
    * Allocate memory for the current process
    */
-  public void allocateMemory() throws InterruptedException {
+  public static int allocateMemory() throws InterruptedException {
     setupSystemCall(CallType.allocateMemory);
   }
 
@@ -169,7 +169,7 @@ public class OS {
    * @param pointer the virtual address of the memory to free
    * @param size the amount of the memory to free
    */
-  public boolean freeMemory(int pointer, int size) throws InterruptedException {
+  public static boolean freeMemory(int pointer, int size) throws InterruptedException {
     setupSystemCall(CallType.freeMemory);
     return (boolean) returnValue;
   }

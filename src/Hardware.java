@@ -2,22 +2,47 @@ public class Hardware {
     private static int [][] TLB = new int[2][2];
     private static byte [] memory = new byte[1048576];
 
-    private final int PAGE_SIZE = 1024;
+    private final static int PAGE_SIZE = 1024;
 
     /**
-     *
+     * Read bytes from memory
+     * @param virtualAddress the address to read from
+     * @return the bytes read
      */
-    public byte read(int address) {
-        //find the page number: address / page size
-        int pageNumber = address / PAGE_SIZE; //address / page size
-        int pageOffset = address & PAGE_SIZE; // page number & page size
-        int physicalAddress; // physical page # * PAGE_SIZE + offset
+    public static byte read(int virtualAddress) throws InterruptedException {
+        int virtualPage = computeVirtualPageNumber(virtualAddress);
+        int pageOffset = computeOffset(virtualAddress);
+        int physicalPage = getTLBEntry(virtualPage);
+        int physicalAddress = 0;
 
-        return 0;
+        if(physicalPage == -1) {
+            OS.getMapping(virtualPage);
+        } else {
+            physicalAddress = computePhysicalAddress(physicalPage, pageOffset);
+        }
+
+        return memory[physicalAddress];
     }
 
-    public void write(int address, byte value) {
-        //find the page number: address / page size
+    /**
+     * Write bytes to memory
+     * @param virtualAddress the address to write to
+     * @param value the value to write
+     */
+    public static void write(int virtualAddress, byte value) throws InterruptedException {
+        int virtualPage = computeVirtualPageNumber(virtualAddress);
+        int pageOffset = computeOffset(virtualAddress);
+        int physicalPage = getTLBEntry(virtualPage);
+        int physicalAddress = 0;
+
+        if(physicalPage == -1) {
+            OS.getMapping(virtualPage);
+        } else {
+            physicalAddress = computePhysicalAddress(physicalPage, pageOffset);
+        }
+        if(physicalPage != -1) {
+            memory[physicalAddress] = value;
+        }
     }
 
     /**
@@ -25,7 +50,7 @@ public class Hardware {
      * @param virtualAddress the virtual address
      * @return the virtual page
      */
-    public int computeVirtualPage(int virtualAddress) {
+    public static int computeVirtualPageNumber(int virtualAddress) {
         return virtualAddress / PAGE_SIZE;
     }
 
@@ -34,7 +59,7 @@ public class Hardware {
      * @param virtualAddress the virtual address
      * @return the offset
      */
-    public int computeOffset(int virtualAddress) {
+    public static int computeOffset(int virtualAddress) {
         return virtualAddress % PAGE_SIZE;
     }
 
@@ -44,7 +69,16 @@ public class Hardware {
      * @param offset the offset
      * @return the physical address
      */
-    public int computePhysicalAddress(int physicalPage, int offset) {
+    public static int computePhysicalAddress(int physicalPage, int offset) {
         return physicalPage * PAGE_SIZE + offset;
+    }
+
+    public static int getTLBEntry(int virtualPage) {
+        for(int i = 0; i < TLB.length; i++) {
+            if (TLB[i][0] == virtualPage) {
+                return TLB[i][0];
+            }
+        }
+        return -1;
     }
 }

@@ -11,8 +11,7 @@ public class PCB {
     public static int nextPID;
     private final int[] deviceIds;
     private LinkedList<KernelMessage> messageQueue;
-
-    private int[] virtualMemory;
+    private int[] virtualMemoryMap;
 
     public PCB(UserlandProcess userlandProcess, int PID, OS.Priority priority) {
         this.userlandProcess = userlandProcess;
@@ -21,9 +20,9 @@ public class PCB {
         this.name = userlandProcess.name;
         this.deviceIds = new int[10];
         this.messageQueue = new LinkedList<>();
-        this.virtualMemory = new int[100];
+        this.virtualMemoryMap = new int[100];
         Arrays.fill(deviceIds, -1);
-        Arrays.fill(virtualMemory, -1);
+        Arrays.fill(virtualMemoryMap, -1);
     }
 
     /**
@@ -185,5 +184,29 @@ public class PCB {
 
     public boolean isMessageQueueEmpty() {
         return this.messageQueue.isEmpty();
+    }
+
+    /**
+     * Update the process' virtual memory map
+     * @param index index of memory mapping (equivalent to the virtual page)
+     * @param physicalPageNumber physical page number
+     */
+    public void updateMemoryMap(int index, int physicalPageNumber) {
+        this.virtualMemoryMap[index] = physicalPageNumber;
+    }
+
+    /**
+     * Get the physical page number
+     * @param index the index
+     * @return the physical page number
+     */
+    public int getPhysicalPage(int index) {
+        return this.virtualMemoryMap[index];
+    }
+
+    public int clearVirtualPage(int index) {
+        int physicalPage = this.virtualMemoryMap[index];
+        this.virtualMemoryMap[index] = -1;
+        return physicalPage;
     }
 }
