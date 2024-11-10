@@ -71,6 +71,7 @@ public class Scheduler {
       oldPID = this.currentUserProcess.getPID();
       addProcess(this.currentUserProcess);
     }
+    Hardware.clearTLB();
     this.currentUserProcess = getNextProcess(); //remove the old process
 
     //compare the previous process with the new process for demotion case

@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Hardware {
     private static int [][] TLB = new int[2][2];
     private static byte [] memory = new byte[1048576];
@@ -80,5 +82,12 @@ public class Hardware {
             }
         }
         return -1;
+    }
+
+    public static void clearTLB() {
+        TLB[0][0] = 0;
+        TLB[0][1] = 0;
+        TLB[1][0] = 0;
+        TLB[1][1] = 0;
     }
 }

@@ -204,9 +204,8 @@ public class PCB {
         return this.virtualMemoryMap[index];
     }
 
-    public int clearVirtualPage(int index) {
+    public void clearVirtualPage(int index) {
         int physicalPage = this.virtualMemoryMap[index];
         this.virtualMemoryMap[index] = -1;
-        return physicalPage;
     }
 }

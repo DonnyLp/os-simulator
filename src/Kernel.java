@@ -217,16 +217,17 @@ public class Kernel extends Process implements Device{
 
         virtualPage = pointer / 1024 ;
         pageCount = size / 1024; //amount of pages to free
+        physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPage);
 
         if(size < pointer) {
-            physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPage);
             end = physicalPage + virtualPage;
             start = end - size;
             Arrays.fill(this.memoryMap, start, end, false);
+            return true;
         } else if(size == pointer) {
             getCurrentUserProcess().clearVirtualPage(virtualPage);
-        } else {
-
+            Arrays.fill(this.memoryMap, virtualPage, size, false);
+            return true;
         }
 
         return false;
