@@ -19,7 +19,14 @@ public class OS {
     read,
     seek,
     close,
-    getPID, getPIDByName, sendMessage, waitForMessage, exit
+    getPID,
+    getPIDByName,
+    sendMessage,
+    waitForMessage,
+    getMapping,
+    freeMemory,
+    allocateMemory,
+    exit
   }
 
   public enum Priority {
@@ -140,6 +147,34 @@ public class OS {
   public static KernelMessage waitForMessage() throws InterruptedException{
     setupSystemCall(CallType.waitForMessage);
     return (KernelMessage) returnValue;
+  }
+
+  /**
+   * Gets the virtual address of the current process
+   * @param virtualPage the virtual page number
+   */
+  public static void getMapping(int virtualPage) throws InterruptedException {
+    setupSystemCall(CallType.getMapping, virtualPage);
+  }
+
+  /**
+   * Allocate memory for the current process
+   * @return the virtual address
+   */
+  public static int allocateMemory(int size) throws InterruptedException {
+    setupSystemCall(CallType.allocateMemory, size);
+    return (int) returnValue;
+  }
+
+  /**
+   * Free memory from the current process
+   * @param pointer the virtual address of the memory to free
+   * @param size the amount of the memory to free
+   * @return true if memory is freed otherwise false
+   */
+  public static boolean freeMemory(int pointer, int size) throws InterruptedException {
+    setupSystemCall(CallType.freeMemory, pointer, size);
+    return (boolean) returnValue;
   }
 
   /**

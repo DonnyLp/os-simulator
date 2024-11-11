@@ -1,10 +1,17 @@
+import java.util.Arrays;
+import java.util.Random;
+
 public class Kernel extends Process implements Device{
   private final Scheduler scheduler;
   private final VFS fileSystem;
-
+  private boolean[] memoryMap;
+  private Random rand;
   public Kernel() {
     this.scheduler = new Scheduler(this);
     this.fileSystem = new VFS();
+    this.memoryMap = new boolean[100];
+    this.rand = new Random();
+    Arrays.fill(memoryMap, false);
   }
 
   @Override
@@ -33,6 +40,9 @@ public class Kernel extends Process implements Device{
               case sleep -> this.scheduler.sleep((int)OS.parameters.getFirst());
               case sendMessage -> sendMessage((KernelMessage) OS.parameters.getFirst());
               case waitForMessage -> OS.returnValue = waitForMessage();
+              case getMapping -> getMapping((int) OS.parameters.getFirst());
+              case allocateMemory -> OS.returnValue = allocateMemory((int) OS.parameters.getFirst());
+              case freeMemory -> OS.returnValue = freeMemory((int) OS.parameters.getFirst(), (int) OS.parameters.getLast());
               case exit -> this.scheduler.exit();
           }
           this.scheduler.currentUserProcess.start();
@@ -170,11 +180,115 @@ public class Kernel extends Process implements Device{
         return fileSystem.write(getCurrentUserProcess().getDeviceIds()[id], data);
     }
 
+    public void getMapping(int virtualPageNumber) {
+        //PCB changes and update the TLB
+        int physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPageNumber);
+        if(physicalPage == -1) {
+            System.out.println("SEGMENTATION FAULT");
+            this.scheduler.exit();
+        } else {
+            int index = rand.nextInt(2);
+            Hardware.updateTLBEntry(index, virtualPageNumber, physicalPage);
+        }
+    }
+
+    /**
+     * Allocate memory to the process
+     * @param size amount of memory to allocate
+     * @return the virtual address
+     */
+    public int allocateMemory(int size) {
+        int pageCount = 0;
+        int physicalPage;
+        if(size % 1024 != 0) {
+            throw new RuntimeException("Size is not a multiple of 1024, reenter");
+        }
+        pageCount = size / 1024;
+        physicalPage = findEmptySpace(pageCount);
+        this.getCurrentUserProcess().updateMemoryMap(pageCount,physicalPage);
+        return size;
+    }
+
+    /**
+     * Free memory from the current process
+     * @param pointer the virtual address of the memory to free
+     * @param size the amount of the memory to free
+     */
+    public boolean freeMemory(int pointer, int size) {
+        int pageCount = 0;
+        int physicalPage = 0;
+        int virtualPage = 0;
+        int start = 0;
+        int end = 0;
+
+        if(size % 1024 != 0) {
+            throw new RuntimeException("Error while reading size, enter a size that is a multiple of 1024");
+        } else if(pointer % 1024 != 0) {
+            throw new RuntimeException("Error while reading pointer, enter a pointer that is a multiple of 1024");
+        }
+
+        virtualPage = pointer / 1024 ;
+        pageCount = pointer / 1024; //amount of pages to free
+        physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPage);
+
+        if(pageCount < virtualPage) {
+            end = physicalPage + virtualPage;
+            start = end - virtualPage;
+            Arrays.fill(this.memoryMap, start, end, false);
+            return true;
+        } else if(pageCount == virtualPage) {
+            end = physicalPage + virtualPage;
+            getCurrentUserProcess().clearVirtualPage(virtualPage);
+            Arrays.fill(this.memoryMap, physicalPage, end, false);
+            return true;
+        }
+        return false;
+    }
+
+
     /**
      * Get the file system
      * @return the file system
      */
     public VFS getFileSystem() {
       return this.fileSystem;
+    }
+
+    /**
+     * Find empty space to allocate memory
+     * @param size amount of space to allocate
+     * @return the starting index of the allocated space
+     */
+    private int findEmptySpace(int size) {
+        int start = 0;
+        int physicalPage = 0;
+        int end = size - 1;
+        boolean loopBool = true;
+
+        while(start < end) {
+            boolean isSpaceOccupied = false;
+            if(memoryMap[start] || memoryMap[end]) {
+                start++;
+                end++;
+                continue;
+            }
+
+            for(int i = start; i <= end; i ++) {
+                if(memoryMap[i]) {
+                    isSpaceOccupied = true;
+                    break;
+                }
+            }
+
+            if(!isSpaceOccupied) {
+                physicalPage = start;
+                Arrays.fill(memoryMap, start, end + 1, true);
+                break;
+            }
+
+            start++;
+            end++;
+        }
+        return physicalPage;
     }
 }
