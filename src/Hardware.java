@@ -19,10 +19,11 @@ public class Hardware {
 
         if(physicalPage == -1) {
             OS.getMapping(virtualPage);
+            physicalPage = getTLBEntry(virtualPage);
+            physicalAddress = computePhysicalAddress(physicalPage, pageOffset);
         } else {
             physicalAddress = computePhysicalAddress(physicalPage, pageOffset);
         }
-
         return memory[physicalAddress];
     }
 
@@ -39,10 +40,11 @@ public class Hardware {
 
         if(physicalPage == -1) {
             OS.getMapping(virtualPage);
+            physicalPage = getTLBEntry(virtualPage);
+            physicalAddress = computePhysicalAddress(physicalPage, pageOffset);
+            memory[physicalAddress] = value;
         } else {
             physicalAddress = computePhysicalAddress(physicalPage, pageOffset);
-        }
-        if(physicalPage != -1) {
             memory[physicalAddress] = value;
         }
     }
@@ -78,16 +80,26 @@ public class Hardware {
     public static int getTLBEntry(int virtualPage) {
         for(int i = 0; i < TLB.length; i++) {
             if (TLB[i][0] == virtualPage) {
-                return TLB[i][0];
+                return TLB[i][1];
             }
         }
         return -1;
     }
-
+    public static void updateTLBEntry(int index, int virtualPage, int physicalPage) {
+        TLB[index][0] = virtualPage;
+        TLB[index][1] = physicalPage;
+    }
     public static void clearTLB() {
         TLB[0][0] = 0;
         TLB[0][1] = 0;
         TLB[1][0] = 0;
         TLB[1][1] = 0;
+    }
+
+    public static void printTLB() {
+        System.out.println("TLB:");
+        for(int i = 0; i < TLB.length; i++) {
+            System.out.println("Entry " + i + ": " + Arrays.toString(TLB[i]));
+        }
     }
 }

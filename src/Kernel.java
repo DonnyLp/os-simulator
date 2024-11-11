@@ -1,13 +1,16 @@
 import java.util.Arrays;
+import java.util.Random;
 
 public class Kernel extends Process implements Device{
   private final Scheduler scheduler;
   private final VFS fileSystem;
-  private boolean[] memoryMap = new boolean[100];
+  private boolean[] memoryMap;
+  private Random rand;
   public Kernel() {
     this.scheduler = new Scheduler(this);
     this.fileSystem = new VFS();
     this.memoryMap = new boolean[100];
+    this.rand = new Random();
     Arrays.fill(memoryMap, false);
   }
 
@@ -179,11 +182,20 @@ public class Kernel extends Process implements Device{
 
     public void getMapping(int virtualPageNumber) {
         //PCB changes and update the TLB
+        int physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPageNumber);
+        if(physicalPage == -1) {
+            System.out.println("SEGMENTATION FAULT");
+            this.scheduler.exit();
+        } else {
+            int index = rand.nextInt(2);
+            Hardware.updateTLBEntry(index, virtualPageNumber, physicalPage);
+        }
     }
 
     /**
      * Allocate memory to the process
      * @param size amount of memory to allocate
+     * @return the virtual address
      */
     public int allocateMemory(int size) {
         int pageCount = 0;
@@ -212,24 +224,24 @@ public class Kernel extends Process implements Device{
         if(size % 1024 != 0) {
             throw new RuntimeException("Error while reading size, enter a size that is a multiple of 1024");
         } else if(pointer % 1024 != 0) {
-            throw new RuntimeException("Error while reading pointer, eneter a pointer that is a multiple of 1024");
+            throw new RuntimeException("Error while reading pointer, enter a pointer that is a multiple of 1024");
         }
 
         virtualPage = pointer / 1024 ;
-        pageCount = size / 1024; //amount of pages to free
+        pageCount = pointer / 1024; //amount of pages to free
         physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPage);
 
-        if(size < pointer) {
+        if(pageCount < virtualPage) {
             end = physicalPage + virtualPage;
-            start = end - size;
+            start = end - virtualPage;
             Arrays.fill(this.memoryMap, start, end, false);
             return true;
-        } else if(size == pointer) {
+        } else if(pageCount == virtualPage) {
+            end = physicalPage + virtualPage;
             getCurrentUserProcess().clearVirtualPage(virtualPage);
-            Arrays.fill(this.memoryMap, virtualPage, size, false);
+            Arrays.fill(this.memoryMap, physicalPage, end, false);
             return true;
         }
-
         return false;
     }
 
@@ -253,7 +265,7 @@ public class Kernel extends Process implements Device{
         int end = size - 1;
         boolean loopBool = true;
 
-        while(end < memoryMap.length) {
+        while(start < end) {
             boolean isSpaceOccupied = false;
             if(memoryMap[start] || memoryMap[end]) {
                 start++;
@@ -270,9 +282,8 @@ public class Kernel extends Process implements Device{
 
             if(!isSpaceOccupied) {
                 physicalPage = start;
-                loopBool = false;
                 Arrays.fill(memoryMap, start, end + 1, true);
-                continue;
+                break;
             }
 
             start++;

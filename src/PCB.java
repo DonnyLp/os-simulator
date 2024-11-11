@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class PCB {
@@ -207,5 +208,19 @@ public class PCB {
     public void clearVirtualPage(int index) {
         int physicalPage = this.virtualMemoryMap[index];
         this.virtualMemoryMap[index] = -1;
+    }
+
+    /**
+     * Get the virtual to physical mappings
+     * @return memory mappings
+     */
+    public HashMap<Integer, Integer> getMemoryMappings() {
+    HashMap<Integer, Integer> mappings = new HashMap<>();
+        for(int i = 0; i < virtualMemoryMap.length; i++) {
+            if(virtualMemoryMap[i] != -1) {
+                mappings.put(i, virtualMemoryMap[i]);
+            }
+        }
+        return mappings;
     }
 }

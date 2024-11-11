@@ -71,6 +71,7 @@ public class Scheduler {
       oldPID = this.currentUserProcess.getPID();
       addProcess(this.currentUserProcess);
     }
+
     Hardware.clearTLB();
     this.currentUserProcess = getNextProcess(); //remove the old process
 
@@ -105,9 +106,11 @@ public class Scheduler {
    * Unschedule the current process, so it never gets ran again
    */
   public void exit() {
-    this.currentUserProcess.closeDevices(kernel.getFileSystem()); // close call open devices
+    this.currentUserProcess.closeDevices(kernel.getFileSystem()); // close all open devices
+    this.clearMemory();
     this.PCBs.remove(this.currentUserProcess.getPID()); //remove the process from pcb list before deleting
-    this.currentUserProcess = getNextProcess();
+    this.currentUserProcess = null;
+    switchProcess();
   }
 
   /**
@@ -316,5 +319,18 @@ public class Scheduler {
    */
   private void printChoseProcess(PCB process) {
     System.out.println(process + " starting...");
+  }
+
+  private void clearMemory() {
+    HashMap<Integer,Integer> mappings = currentUserProcess.getMemoryMappings();
+    System.out.println("Clearing physical pages: " + mappings.keySet());
+    if (!mappings.isEmpty()) {
+      for (int virtualPage : mappings.keySet()) {
+        boolean memoryFreed = this.kernel.freeMemory(virtualPage * 1024, mappings.get(virtualPage) * 1024);
+        if (!memoryFreed) {
+          System.err.println("Can't clear all of the memory");
+        }
+      }
+    }
   }
 }

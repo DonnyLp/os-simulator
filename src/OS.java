@@ -159,18 +159,21 @@ public class OS {
 
   /**
    * Allocate memory for the current process
+   * @return the virtual address
    */
-  public static int allocateMemory() throws InterruptedException {
-    setupSystemCall(CallType.allocateMemory);
+  public static int allocateMemory(int size) throws InterruptedException {
+    setupSystemCall(CallType.allocateMemory, size);
+    return (int) returnValue;
   }
 
   /**
    * Free memory from the current process
    * @param pointer the virtual address of the memory to free
    * @param size the amount of the memory to free
+   * @return true if memory is freed otherwise false
    */
   public static boolean freeMemory(int pointer, int size) throws InterruptedException {
-    setupSystemCall(CallType.freeMemory);
+    setupSystemCall(CallType.freeMemory, pointer, size);
     return (boolean) returnValue;
   }
 
