@@ -12,7 +12,7 @@ public class PCB {
     public static int nextPID;
     private final int[] deviceIds;
     private LinkedList<KernelMessage> messageQueue;
-    private int[] virtualMemoryMap;
+    private VirtualToPhysicalMapping[] virtualMemoryMap;
 
     public PCB(UserlandProcess userlandProcess, int PID, OS.Priority priority) {
         this.userlandProcess = userlandProcess;
@@ -21,9 +21,9 @@ public class PCB {
         this.name = userlandProcess.name;
         this.deviceIds = new int[10];
         this.messageQueue = new LinkedList<>();
-        this.virtualMemoryMap = new int[100];
+        this.virtualMemoryMap = new VirtualToPhysicalMapping[100];
         Arrays.fill(deviceIds, -1);
-        Arrays.fill(virtualMemoryMap, -1);
+        Arrays.fill(virtualMemoryMap, null);
     }
 
     /**
@@ -193,7 +193,8 @@ public class PCB {
      * @param physicalPageNumber physical page number
      */
     public void updateMemoryMap(int index, int physicalPageNumber) {
-        this.virtualMemoryMap[index] = physicalPageNumber;
+        this.virtualMemoryMap[index] = new VirtualToPhysicalMapping();
+        this.virtualMemoryMap[index].setPhysicalPageNumber(physicalPageNumber);
     }
 
     /**
@@ -202,12 +203,11 @@ public class PCB {
      * @return the physical page number
      */
     public int getPhysicalPage(int index) {
-        return this.virtualMemoryMap[index];
+        return this.virtualMemoryMap[index].getPhysicalPageNumber();
     }
 
     public void clearVirtualPage(int index) {
-        int physicalPage = this.virtualMemoryMap[index];
-        this.virtualMemoryMap[index] = -1;
+        this.virtualMemoryMap[index] = null;
     }
 
     /**
@@ -217,8 +217,8 @@ public class PCB {
     public HashMap<Integer, Integer> getMemoryMappings() {
     HashMap<Integer, Integer> mappings = new HashMap<>();
         for(int i = 0; i < virtualMemoryMap.length; i++) {
-            if(virtualMemoryMap[i] != -1) {
-                mappings.put(i, virtualMemoryMap[i]);
+            if(virtualMemoryMap[i].getPhysicalPageNumber() != -1) {
+                mappings.put(i, virtualMemoryMap[i].getPhysicalPageNumber());
             }
         }
         return mappings;

@@ -184,8 +184,7 @@ public class Kernel extends Process implements Device{
         //PCB changes and update the TLB
         int physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPageNumber);
         if(physicalPage == -1) {
-            System.out.println("SEGMENTATION FAULT");
-            this.scheduler.exit();
+            physicalPage = findEmptySpace(virtualPageNumber);
         } else {
             int index = rand.nextInt(2);
             Hardware.updateTLBEntry(index, virtualPageNumber, physicalPage);
@@ -205,6 +204,11 @@ public class Kernel extends Process implements Device{
         }
         pageCount = size / 1024;
         physicalPage = findEmptySpace(pageCount);
+        //if not physical page is found in the in use array free up some space (swap)
+        if(physicalPage == 0) {
+            //
+
+        }
         this.getCurrentUserProcess().updateMemoryMap(pageCount,physicalPage);
         return size;
     }
@@ -231,16 +235,19 @@ public class Kernel extends Process implements Device{
         pageCount = pointer / 1024; //amount of pages to free
         physicalPage = getCurrentUserProcess().getPhysicalPage(virtualPage);
 
-        if(pageCount < virtualPage) {
-            end = physicalPage + virtualPage;
-            start = end - virtualPage;
-            Arrays.fill(this.memoryMap, start, end, false);
-            return true;
-        } else if(pageCount == virtualPage) {
-            end = physicalPage + virtualPage;
-            getCurrentUserProcess().clearVirtualPage(virtualPage);
-            Arrays.fill(this.memoryMap, physicalPage, end, false);
-            return true;
+        //could be -1 because page isn't in physical memory, but on disk
+        if(physicalPage != -1) {
+            if(pageCount < virtualPage) {
+                end = physicalPage + virtualPage;
+                start = end - virtualPage;
+                Arrays.fill(this.memoryMap, start, end, false);
+                return true;
+            } else if(pageCount == virtualPage) {
+                end = physicalPage + virtualPage;
+                getCurrentUserProcess().clearVirtualPage(virtualPage);
+                Arrays.fill(this.memoryMap, physicalPage, end, false);
+                return true;
+            }
         }
         return false;
     }
@@ -263,7 +270,6 @@ public class Kernel extends Process implements Device{
         int start = 0;
         int physicalPage = 0;
         int end = size - 1;
-        boolean loopBool = true;
 
         while(start < end) {
             boolean isSpaceOccupied = false;
@@ -272,20 +278,17 @@ public class Kernel extends Process implements Device{
                 end++;
                 continue;
             }
-
             for(int i = start; i <= end; i ++) {
                 if(memoryMap[i]) {
                     isSpaceOccupied = true;
                     break;
                 }
             }
-
             if(!isSpaceOccupied) {
                 physicalPage = start;
                 Arrays.fill(memoryMap, start, end + 1, true);
                 break;
             }
-
             start++;
             end++;
         }

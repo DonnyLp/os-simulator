@@ -184,6 +184,14 @@ public class Scheduler {
   }
 
   /**
+   * Grab a random process with physical memory in use
+   * @return process with physical memory in use (victim page)
+   */
+  public void getRandomProcess() {
+
+  }
+
+  /**
    * Demotes the passed in userland process
    */
   private void demoteProcess(PCB process) {

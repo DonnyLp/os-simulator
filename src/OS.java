@@ -10,6 +10,10 @@ public class OS {
 
   public static Object returnValue;
 
+  public static int swapFilePageNumber;
+
+  public static int swapFileFD;
+
   public enum CallType {
     createProcess,
     switchProcess,
@@ -53,6 +57,7 @@ public class OS {
     kernel = new Kernel();
     createProcess(initialProcess, Priority.interactive);
     createProcess(new Idle(), Priority.background);
+    swapFileFD = OS.open("file swapfile.sys");
   }
 
   /**
@@ -86,6 +91,7 @@ public class OS {
   public static void close(int id) throws InterruptedException {
     setupSystemCall(CallType.close, id);
   }
+
   /**
     * Read from the device
    * @param id the device id

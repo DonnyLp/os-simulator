@@ -3,12 +3,14 @@ import java.util.Arrays;
 public class VFS implements Device {
     private final Device[] devices;
     private final int[] ids;
-    FakeFileSystem file = new FakeFileSystem();
-    RandomDevice randomDevice = new RandomDevice();
+    FakeFileSystem file;
+    RandomDevice randomDevice;
 
     public VFS() {
         devices = new Device[20];
         ids = new int[20];
+        file = new FakeFileSystem();
+        randomDevice = new RandomDevice();
         Arrays.fill(ids,-1);
     }
     /**
