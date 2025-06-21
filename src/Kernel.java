@@ -263,29 +263,30 @@ public class Kernel extends Process implements Device{
         int start = 0;
         int physicalPage = 0;
         int end = size - 1;
-        boolean loopBool = true;
-
-        while(start < end) {
-            boolean isSpaceOccupied = false;
+        boolean isSpaceOccuiped;
+      
+      while(start < end) {
+            isSpaceOccupied = false;
+            // need to ensure that the bounds aren't occupied
+            // if so we'll just keeping moving along the memory map
             if(memoryMap[start] || memoryMap[end]) {
                 start++;
                 end++;
                 continue;
             }
-
+            //since outer bounds aren't occupied we'll check the space in between
             for(int i = start; i <= end; i ++) {
                 if(memoryMap[i]) {
                     isSpaceOccupied = true;
                     break;
                 }
             }
-
+            //determine if the space within our memory map bound is clear 
             if(!isSpaceOccupied) {
                 physicalPage = start;
                 Arrays.fill(memoryMap, start, end + 1, true);
                 break;
             }
-
             start++;
             end++;
         }
