@@ -171,15 +171,6 @@ src/
 └── [Test Programs...]    # Various test and example programs
 ```
 
-## Contributing
-
-When adding new features:
-
-1. Follow the existing code patterns
-2. Implement proper error handling
-3. Add corresponding test programs
-4. Update documentation as needed
-
 ## License
 
 This project is for educational purposes. Please check with the repository owner for specific licensing terms.
