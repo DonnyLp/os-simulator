@@ -1,3 +1,6 @@
 # extra intellji folders
 .idea
 out
+
+# Java class files
+*.class
